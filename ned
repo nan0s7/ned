@@ -14,7 +14,7 @@ count_file_size() {
 	done < "$current_file"
 }
 
-check_number() {
+check_number_r() {
 	number="$1"
 	bool="0"
 	i="1"
@@ -41,7 +41,7 @@ check_sure() {
 	read sure_in
 }
 
-compare_bools() {
+compare_bools_r() {
 	if [ "$1" = "0" ]; then
 		if [ "$2" = "0" ]; then
 			echo 0
@@ -70,7 +70,9 @@ print_lines() {
 	while read line; do
 		if [ "$i" -ge "$start" ]; then
 			if [ "$i" -le "$end" ]; then
-				echo "$line"
+#				printf "$line"
+#				echo
+				echo $line
 			fi
 		fi
 		i="$(( $i + 1 ))"
@@ -85,7 +87,7 @@ make_file() {
 	fi
 }
 
-check_argument() {
+check_arg_r() {
 	if [ -n "$1" ]; then
 		echo "0"
 	else
@@ -93,7 +95,7 @@ check_argument() {
 	fi
 }
 
-count_arguments() {
+count_args_r() {
 	all="$1"
 	len=$(expr length "$1")
 	i=1
@@ -112,9 +114,10 @@ count_arguments() {
 	echo "$spaces"
 }
 
-cut_off_cmd() {
-	args=$(expr substr "$1" 3 $(expr length "$1"))
-	echo "$args"
+cut_off_cmd_r() {
+#	args=$(expr substr "$1" 3 $(expr length "$1"))
+#	echo "$args"
+	echo $(expr substr "$1" 3 $(expr length "$1"))
 }
 
 set_read_args() {
@@ -138,18 +141,18 @@ check_cmd() {
 	if [ "$cmd" = "p" ]; then
 		# p. or something prints the whole file
 		# p, or something prints enough of the file to fit on screen
-		args=$(cut_off_cmd "$full_input_cmd")
-		num_args=$(count_arguments "$args")
+		args=$(cut_off_cmd_r "$full_input_cmd")
+		num_args=$(count_args_r "$args")
 		set_read_args "$args" "$num_args"
 		if [ "$num_args" -eq "2" ]; then
-			tmp=$(( $(check_number "$read_arg") + $(check_number "$read_arg_2") ))
+			tmp=$(( $(check_number_r "$read_arg") + $(check_number_r "$read_arg_2") ))
 			if [ "$tmp" -eq "0" ]; then
 				print_lines "$read_arg" "$read_arg_2"
 			else
 				echo "At least one argument is not a number"
 			fi
 		elif [ "$num_args" -eq "1" ]; then
-			tmp=$(check_number "$read_arg")
+			tmp=$(check_number_r "$read_arg")
 			if [ "$tmp" -eq "0" ]; then
 				print_lines "$read_arg" "$read_arg"
 			else
@@ -162,10 +165,10 @@ check_cmd() {
 		echo "print help information"
 		print_help
 	elif [ "$cmd" = "l" ]; then
-		args=$(cut_off_cmd "$full_input_cmd")
-		num_args=$(count_arguments "$args")
+		args=$(cut_off_cmd_r "$full_input_cmd")
+		num_args=$(count_args_r "$args")
 		set_read_args "$args" "$num_args"
-		tmp=$(( $(check_number "$read_arg") + $(check_argument "$read_arg") ))
+		tmp=$(( $(check_number_r "$read_arg") + $(check_arg_r "$read_arg") ))
 		if [ "$tmp" -eq "0" ] && [ "$read_arg" -le "$file_size" ]; then
 			s_line="$read_arg"
 		else
