@@ -70,8 +70,6 @@ print_lines() {
 	while read line; do
 		if [ "$i" -ge "$start" ]; then
 			if [ "$i" -le "$end" ]; then
-#				printf "$line"
-#				echo
 				echo $line
 			fi
 		fi
@@ -95,29 +93,75 @@ check_arg_r() {
 	fi
 }
 
-count_args_r() {
+count_spaces_r() {
 	all="$1"
-	len=$(expr length "$1")
+	len="$2"
 	i=1
-	spaces="1"
-	if [ "$len" -gt 0 ]; then
-		while [ "$i" -lt "$len" ]; do
-			tmp=$(expr substr "$all" "$i" 1)
-			if [ "$tmp" = " " ]; then
-				spaces=$(( $spaces + 1 ))
-			fi
-			i=$(( $i + 1 ))
-		done
-	else
-		spaces="0"
-	fi
+	spaces="0"
+	while [ "$i" -lt "$len" ]; do
+		tmp=$(expr substr "$all" "$i" 1)
+		if [ "$tmp" = " " ]; then
+			spaces=$(( $spaces + 1 ))
+		fi
+		i=$(( $i + 1 ))
+	done
 	echo "$spaces"
 }
 
+count_args_r() {
+	all="$1"
+	len=$(expr length "$all")
+#	spaces=$(count_spaces_r "$all" "$len")
+#	sl_diff=$(( $len - $spaces ))
+	# Add more error checking here
+	n=0
+	if [ "$len" -gt "0" ]; then
+		i=0
+		tmp=$(expr substr "$all" "$len" 1)
+		if [ "$tmp" != " " ]; then
+			all="$all"" "
+		fi
+		while [ "$i" -le "$len" ]; do
+			ch=$(expr substr "$all" "$i" 1)
+			if [ "$ch" != " " ]; then
+				tmp=$(expr substr "$all" $(( $i + 1 )) 1)
+				if [ "$tmp" = " " ]; then
+					n=$(( $n + 1 ))
+				fi
+			fi
+			i=$(( $i + 1 ))
+		done
+	fi
+	echo "$n"
+}
+
 cut_off_cmd_r() {
-#	args=$(expr substr "$1" 3 $(expr length "$1"))
-#	echo "$args"
-	echo $(expr substr "$1" 3 $(expr length "$1"))
+	echo $(expr substr "$1" 2 $(expr length "$1"))
+}
+
+rm_ch_at_x_r() {
+	s="$1"
+	char_in="$2"
+	loc="$3"
+	ch_len="$4"
+	tmp="1"
+	out="$s"
+	if ! [ -n "$ch_len" ]; then
+		ch_len="1"
+#		char=$(expr substr "$s" "$loc" "$ch_len")
+		out=$(expr substr "$s" 1 "$loc")$(expr substr "$s" $(( $len + $ch_len )) $(expr length "$s"))
+	else
+		while [ "$tmp" -eq "1" ]; do
+			char=$(expr substr "$s" "$loc" "$ch_len")
+			if [ "$char" = "$char_in" ]; then
+				out=$(expr substr "$s" 1 "$loc")$(expr substr "$s" $(( $len + $ch_len )) $(expr length "$s"))
+				tmp="0"
+			else
+				ch_len=$(( $ch_len - 1 ))
+			fi
+		done
+	fi
+	echo "$out"
 }
 
 set_read_args() {
@@ -155,8 +199,10 @@ check_cmd() {
 			tmp=$(check_number_r "$read_arg")
 			if [ "$tmp" -eq "0" ]; then
 				print_lines "$read_arg" "$read_arg"
+			elif [ "$read_arg" = "." ]; then
+				print_lines "0" "$file_size"
 			else
-				echo "At least one argument is not a number"
+				echo "At least one given argument is invalid"
 			fi
 		else
 			print_lines "$s_line" "$s_line"
