@@ -2,10 +2,11 @@
 
 cmd=""
 s_line="0"
-status_line=" status line.... "
 current_file="file.sh"
-tmp_bool="0"
 modified="0"
+seperator=" "
+arr_sep="[=-=]"
+arr_sep_len=$(expr length "$arr_sep")
 
 count_file_size() {
 	file_size="0"
@@ -13,6 +14,103 @@ count_file_size() {
 		file_size="$(( $file_size + 1 ))"
 	done < "$current_file"
 }
+
+#get_pos_in_str() {
+#}
+
+add_element_r() {
+	arr="$1"
+	val="$2"
+	pos="$3"
+	len=$(expr length "$arr")
+	if [ "$pos" = "0" ]; then
+		arr="$val""$arr_sep""$arr"
+	elif [ "$pos" = "." ]; then
+		arr="$arr""$val""$arr_sep"
+	else
+		# compress this loop into a func that returns str pos of element number x (3rd el = char #6 in str...)
+		i=0
+		el=0
+		while [ "$i" -lt "$len" ]; do
+			if [ "$el" -eq "$pos" ]; then
+#				tmp=$(( $i - 2 + $arr_sep_len ))
+				tmp=$i
+				arr=$(expr substr "$arr" 1 $tmp)"$val""$arr_sep"$(expr substr "$arr" $(( $tmp + 1 )) $len)
+				break
+			fi
+			tmp=$(expr substr "$arr" $i $arr_sep_len)
+			if [ "$tmp" = "$arr_sep" ]; then
+				el=$(( $el + 1 ))
+				i=$(( $i + $arr_sep_len - 1 ))
+			else
+				i=$(( $i + 1 ))
+			fi
+		done
+	fi
+	echo "$arr"
+}
+
+# doesn't work right now for some reason
+get_value_r() {
+	arr="$1"
+	pos="$2"
+	len=$(expr length "$arr")
+	i=0
+	el=0
+	while [ "$i" -lt "$len" ]; do
+		if [ "$el" -eq "$pos" ]; then
+			val=$(expr substr "$all" $i $len)
+			break
+		fi
+		tmp=$(expr substr "$arr" $i $arr_sep_len)
+		if [ "$tmp" = "$arr_sep" ]; then
+			el=$(( $el + 1 ))
+#			i=$(( $i + $arr_sep_len - 1 ))
+#		else
+#			i=$(( $i + 1 ))
+		fi
+		i=$(( $i + 1 ))
+	done
+	echo "$val"
+}
+
+#get_position_r() {
+#}
+
+#remove_value_r() {
+#}
+
+#remove_element_r() {
+#}
+
+length_r() {
+	arr="$1"
+	len=$(expr length "$arr")
+	i=0
+	el=0
+	while [ "$i" -lt "$len" ]; do
+		tmp=$(expr substr "$arr" $i $arr_sep_len)
+		if [ "$tmp" = "$arr_sep" ]; then
+			el=$(( $el + 1 ))
+		fi
+		i=$(( $i + 1 ))
+	done
+	echo "$el"
+}
+
+
+a="1""$arr_sep""hello""$arr_sep"
+echo "$a"
+a=$(add_element_r "$a" "world" ".")
+echo "$a"
+a=$(add_element_r "$a" "0" "0")
+echo "$a"
+a=$(add_element_r "$a" "statement:..." "2")
+echo "$a"
+a=$(add_element_r "$a" "" "3")
+echo "$a"
+echo $(length_r "$a")
+#echo $(get_value_r "$a" "2")
 
 check_number_r() {
 	number="$1"
@@ -31,14 +129,6 @@ check_number_r() {
 		i="$(( $i + 1 ))"
 	done
 	echo "$bool"
-}
-
-check_sure() {
-	text="$1"
-	options="$2"
-	printf "Are you sure you want to ""$text""? "
-	printf "(y)es or (n)o"
-	read sure_in
 }
 
 compare_bools_r() {
@@ -93,39 +183,22 @@ check_arg_r() {
 	fi
 }
 
-count_spaces_r() {
-	all="$1"
-	len="$2"
-	i=1
-	spaces="0"
-	while [ "$i" -lt "$len" ]; do
-		tmp=$(expr substr "$all" "$i" 1)
-		if [ "$tmp" = " " ]; then
-			spaces=$(( $spaces + 1 ))
-		fi
-		i=$(( $i + 1 ))
-	done
-	echo "$spaces"
-}
-
 count_args_r() {
 	all="$1"
 	len=$(expr length "$all")
-#	spaces=$(count_spaces_r "$all" "$len")
-#	sl_diff=$(( $len - $spaces ))
 	# Add more error checking here
 	n=0
 	if [ "$len" -gt "0" ]; then
 		i=0
 		tmp=$(expr substr "$all" "$len" 1)
-		if [ "$tmp" != " " ]; then
+		if ! [ "$tmp" = "$seperator" ]; then
 			all="$all"" "
 		fi
 		while [ "$i" -le "$len" ]; do
-			ch=$(expr substr "$all" "$i" 1)
-			if [ "$ch" != " " ]; then
+			tmp=$(expr substr "$all" "$i" 1)
+			if ! [ "$tmp" = "$seperator" ]; then
 				tmp=$(expr substr "$all" $(( $i + 1 )) 1)
-				if [ "$tmp" = " " ]; then
+				if [ "$tmp" = "$seperator" ]; then
 					n=$(( $n + 1 ))
 				fi
 			fi
@@ -139,31 +212,7 @@ cut_off_cmd_r() {
 	echo $(expr substr "$1" 2 $(expr length "$1"))
 }
 
-rm_ch_at_x_r() {
-	s="$1"
-	char_in="$2"
-	loc="$3"
-	ch_len="$4"
-	tmp="1"
-	out="$s"
-	if ! [ -n "$ch_len" ]; then
-		ch_len="1"
-#		char=$(expr substr "$s" "$loc" "$ch_len")
-		out=$(expr substr "$s" 1 "$loc")$(expr substr "$s" $(( $len + $ch_len )) $(expr length "$s"))
-	else
-		while [ "$tmp" -eq "1" ]; do
-			char=$(expr substr "$s" "$loc" "$ch_len")
-			if [ "$char" = "$char_in" ]; then
-				out=$(expr substr "$s" 1 "$loc")$(expr substr "$s" $(( $len + $ch_len )) $(expr length "$s"))
-				tmp="0"
-			else
-				ch_len=$(( $ch_len - 1 ))
-			fi
-		done
-	fi
-	echo "$out"
-}
-
+# will be replaced by a function that reads a certain position of a string for arguments
 set_read_args() {
 	tmp="$1"
 	num_args="$2"
@@ -264,4 +313,4 @@ main() {
 	done
 }
 
-main
+#main
