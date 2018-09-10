@@ -6,12 +6,12 @@ current_file="file.sh"
 modified="0"
 seperator=" "
 arr_sep="[=-=]"
-arr_sep_len=$(expr length "$arr_sep")
+arr_sep_len=${#arr_sep}
 
 count_file_size() {
 	file_size="0"
-	while read line; do
-		file_size="$(( $file_size + 1 ))"
+	while read -r line; do
+		file_size="$(( file_size + 1 ))"
 	done < "$current_file"
 }
 
@@ -22,7 +22,7 @@ add_element_r() {
 	arr="$1"
 	val="$2"
 	pos="$3"
-	len=$(expr length "$arr")
+	len=${#arr}
 	if [ "$pos" = "0" ]; then
 		arr="$val""$arr_sep""$arr"
 	elif [ "$pos" = "." ]; then
@@ -40,10 +40,10 @@ add_element_r() {
 			fi
 			tmp=$(expr substr "$arr" $i $arr_sep_len)
 			if [ "$tmp" = "$arr_sep" ]; then
-				el=$(( $el + 1 ))
-				i=$(( $i + $arr_sep_len - 1 ))
+				el=$(( el + 1 ))
+				i=$(( i + arr_sep_len - 1 ))
 			else
-				i=$(( $i + 1 ))
+				i=$(( i + 1 ))
 			fi
 		done
 	fi
@@ -54,7 +54,7 @@ add_element_r() {
 get_value_r() {
 	arr="$1"
 	pos="$2"
-	len=$(expr length "$arr")
+	len=${#arr}
 	i=0
 	el=0
 	while [ "$i" -lt "$len" ]; do
@@ -64,12 +64,12 @@ get_value_r() {
 		fi
 		tmp=$(expr substr "$arr" $i $arr_sep_len)
 		if [ "$tmp" = "$arr_sep" ]; then
-			el=$(( $el + 1 ))
-#			i=$(( $i + $arr_sep_len - 1 ))
+			el=$(( el + 1 ))
+#			i=$(( i + arr_sep_len - 1 ))
 #		else
-#			i=$(( $i + 1 ))
+#			i=$(( i + 1 ))
 		fi
-		i=$(( $i + 1 ))
+		i=$(( i + 1 ))
 	done
 	echo "$val"
 }
@@ -85,38 +85,38 @@ get_value_r() {
 
 length_r() {
 	arr="$1"
-	len=$(expr length "$arr")
+	len=${#arr}
 	i=0
 	el=0
 	while [ "$i" -lt "$len" ]; do
 		tmp=$(expr substr "$arr" $i $arr_sep_len)
 		if [ "$tmp" = "$arr_sep" ]; then
-			el=$(( $el + 1 ))
+			el=$(( el + 1 ))
 		fi
-		i=$(( $i + 1 ))
+		i=$(( i + 1 ))
 	done
 	echo "$el"
 }
 
 
-a="1""$arr_sep""hello""$arr_sep"
-echo "$a"
-a=$(add_element_r "$a" "world" ".")
-echo "$a"
-a=$(add_element_r "$a" "0" "0")
-echo "$a"
-a=$(add_element_r "$a" "statement:..." "2")
-echo "$a"
-a=$(add_element_r "$a" "" "3")
-echo "$a"
-echo $(length_r "$a")
+#a="1""$arr_sep""hello""$arr_sep"
+#echo "$a"
+#a=$(add_element_r "$a" "world" ".")
+#echo "$a"
+#a=$(add_element_r "$a" "0" "0")
+#echo "$a"
+#a=$(add_element_r "$a" "statement:..." "2")
+#echo "$a"
+#a=$(add_element_r "$a" "" "3")
+#echo "$a"
+#echo $(length_r "$a")
 #echo $(get_value_r "$a" "2")
 
 check_number_r() {
 	number="$1"
 	bool="0"
 	i="1"
-	num_length=$(expr length "$number")
+	num_length=${#number}
 	while [ "$i" -le "$num_length" ]; do
 		number_part=$(expr substr "$number" "$i" 1)
 		case $number_part in
@@ -126,7 +126,7 @@ check_number_r() {
 		if [ "$tmp" = "1" ]; then
 			bool="1"
 		fi
-		i="$(( $i + 1 ))"
+		i="$(( i + 1 ))"
 	done
 	echo "$bool"
 }
@@ -150,20 +150,20 @@ print_help() {
 get_input() {
 	read_in=""
 	printf "$s_line"": "
-	read read_in
+	read -r read_in
 }
 
 print_lines() {
 	start="$1"
 	end="$2"
 	i=0
-	while read line; do
+	while read -r line; do
 		if [ "$i" -ge "$start" ]; then
 			if [ "$i" -le "$end" ]; then
 				echo $line
 			fi
 		fi
-		i="$(( $i + 1 ))"
+		i="$(( i + 1 ))"
 	done < "$current_file"
 }
 
@@ -185,7 +185,7 @@ check_arg_r() {
 
 count_args_r() {
 	all="$1"
-	len=$(expr length "$all")
+	len=${#all}
 	# Add more error checking here
 	n=0
 	if [ "$len" -gt "0" ]; then
@@ -197,19 +197,19 @@ count_args_r() {
 		while [ "$i" -le "$len" ]; do
 			tmp=$(expr substr "$all" "$i" 1)
 			if ! [ "$tmp" = "$seperator" ]; then
-				tmp=$(expr substr "$all" $(( $i + 1 )) 1)
+				tmp=$(expr substr "$all" $(( i + 1 )) 1)
 				if [ "$tmp" = "$seperator" ]; then
-					n=$(( $n + 1 ))
+					n=$(( n + 1 ))
 				fi
 			fi
-			i=$(( $i + 1 ))
+			i=$(( i + 1 ))
 		done
 	fi
 	echo "$n"
 }
 
 cut_off_cmd_r() {
-	echo $(expr substr "$1" 2 $(expr length "$1"))
+	echo $(expr substr "$1" 2 ${#1})
 }
 
 # will be replaced by a function that reads a certain position of a string for arguments
@@ -219,11 +219,11 @@ set_read_args() {
 	# make this more general in the future
 	if [ "$num_args" -gt "0" ]; then
 		if [ "$num_args" -eq "1" ]; then
-			read_arg=$(expr substr "$tmp" 1 $(expr length "$tmp"))
+			read_arg=$(expr substr "$tmp" 1 ${#tmp})
 		elif [ "$num_args" -eq "2" ]; then
 			space_location=$(expr index "$tmp" " ")
-			read_arg=$(expr substr "$tmp" 1 "$(( $space_location - 1 ))")
-			read_arg_2=$(expr substr "$tmp" "$(( $space_location + 1 ))" $(expr length "$tmp"))
+			read_arg=$(expr substr "$tmp" 1 "$(( space_location - 1 ))")
+			read_arg_2=$(expr substr "$tmp" "$(( space_location + 1 ))" ${#tmp})
 		fi
 	fi
 }
@@ -313,4 +313,4 @@ main() {
 	done
 }
 
-#main
+main
