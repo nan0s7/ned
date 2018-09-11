@@ -5,8 +5,9 @@ s_line="0"
 current_file="file.sh"
 modified="0"
 seperator=" "
-arr_sep="[=-=]"
-arr_sep_len=${#arr_sep}
+#arr_sep=" "
+#arr_sep_len=${#arr_sep}
+#old_IFS="$IFS"
 
 count_file_size() {
 	file_size="0"
@@ -15,116 +16,38 @@ count_file_size() {
 	done < "$current_file"
 }
 
-#get_pos_in_str() {
-#}
-
-add_element_r() {
-	arr="$1"
-	val="$2"
-	pos="$3"
-	len=${#arr}
-	if [ "$pos" = "0" ]; then
-		arr="$val""$arr_sep""$arr"
-	elif [ "$pos" = "." ]; then
-		arr="$arr""$val""$arr_sep"
-	else
-		# compress this loop into a func that returns str pos of element number x (3rd el = char #6 in str...)
-		i=0
-		el=0
-		while [ "$i" -lt "$len" ]; do
-			if [ "$el" -eq "$pos" ]; then
-#				tmp=$(( $i - 2 + $arr_sep_len ))
-				tmp=$i
-				arr=$(expr substr "$arr" 1 $tmp)"$val""$arr_sep"$(expr substr "$arr" $(( $tmp + 1 )) $len)
-				break
-			fi
-			tmp=$(expr substr "$arr" $i $arr_sep_len)
-			if [ "$tmp" = "$arr_sep" ]; then
-				el=$(( el + 1 ))
-				i=$(( i + arr_sep_len - 1 ))
-			else
-				i=$(( i + 1 ))
-			fi
-		done
-	fi
-	echo "$arr"
-}
-
-# doesn't work right now for some reason
 get_value_r() {
-	arr="$1"
-	pos="$2"
-	len=${#arr}
 	i=0
-	el=0
-	while [ "$i" -lt "$len" ]; do
-		if [ "$el" -eq "$pos" ]; then
-			val=$(expr substr "$all" $i $len)
-			break
+#	IFS="$arr_sep"
+	for element in $1; do
+		if [ "$i" -eq "$2" ]; then
+			echo "$element"
+		else
+			i=$(( i + 1 ))
 		fi
-		tmp=$(expr substr "$arr" $i $arr_sep_len)
-		if [ "$tmp" = "$arr_sep" ]; then
-			el=$(( el + 1 ))
-#			i=$(( i + arr_sep_len - 1 ))
-#		else
-#			i=$(( i + 1 ))
-		fi
-		i=$(( i + 1 ))
 	done
-	echo "$val"
 }
 
-#get_position_r() {
-#}
-
-#remove_value_r() {
-#}
-
-#remove_element_r() {
-#}
-
-length_r() {
-	arr="$1"
-	len=${#arr}
+get_length_r() {
 	i=0
-	el=0
-	while [ "$i" -lt "$len" ]; do
-		tmp=$(expr substr "$arr" $i $arr_sep_len)
-		if [ "$tmp" = "$arr_sep" ]; then
-			el=$(( el + 1 ))
-		fi
+	for element in $1; do
 		i=$(( i + 1 ))
 	done
-	echo "$el"
+	echo "$i"
 }
-
-
-#a="1""$arr_sep""hello""$arr_sep"
-#echo "$a"
-#a=$(add_element_r "$a" "world" ".")
-#echo "$a"
-#a=$(add_element_r "$a" "0" "0")
-#echo "$a"
-#a=$(add_element_r "$a" "statement:..." "2")
-#echo "$a"
-#a=$(add_element_r "$a" "" "3")
-#echo "$a"
-#echo $(length_r "$a")
-#echo $(get_value_r "$a" "2")
 
 check_number_r() {
 	number="$1"
-	bool="0"
-	i="1"
-	num_length=${#number}
-	while [ "$i" -le "$num_length" ]; do
+	bool=0
+	i=1
+	while [ "$i" -le "${#number}" ]; do
 		number_part=$(expr substr "$number" "$i" 1)
 		case $number_part in
 			(*[!0-9]*|'') tmp="1";;
 			(*) tmp="0";;
 		esac
 		if [ "$tmp" = "1" ]; then
-			bool="1"
+			bool=1
 		fi
 		i="$(( i + 1 ))"
 	done
@@ -183,31 +106,6 @@ check_arg_r() {
 	fi
 }
 
-count_args_r() {
-	all="$1"
-	len=${#all}
-	# Add more error checking here
-	n=0
-	if [ "$len" -gt "0" ]; then
-		i=0
-		tmp=$(expr substr "$all" "$len" 1)
-		if ! [ "$tmp" = "$seperator" ]; then
-			all="$all"" "
-		fi
-		while [ "$i" -le "$len" ]; do
-			tmp=$(expr substr "$all" "$i" 1)
-			if ! [ "$tmp" = "$seperator" ]; then
-				tmp=$(expr substr "$all" $(( i + 1 )) 1)
-				if [ "$tmp" = "$seperator" ]; then
-					n=$(( n + 1 ))
-				fi
-			fi
-			i=$(( i + 1 ))
-		done
-	fi
-	echo "$n"
-}
-
 cut_off_cmd_r() {
 	echo $(expr substr "$1" 2 ${#1})
 }
@@ -235,7 +133,7 @@ check_cmd() {
 		# p. or something prints the whole file
 		# p, or something prints enough of the file to fit on screen
 		args=$(cut_off_cmd_r "$full_input_cmd")
-		num_args=$(count_args_r "$args")
+		num_args=$(get_length_r "$args")
 		set_read_args "$args" "$num_args"
 		if [ "$num_args" -eq "2" ]; then
 			tmp=$(( $(check_number_r "$read_arg") + $(check_number_r "$read_arg_2") ))
@@ -261,7 +159,7 @@ check_cmd() {
 		print_help
 	elif [ "$cmd" = "l" ]; then
 		args=$(cut_off_cmd_r "$full_input_cmd")
-		num_args=$(count_args_r "$args")
+		num_args=$(get_length_r "$args")
 		set_read_args "$args" "$num_args"
 		tmp=$(( $(check_number_r "$read_arg") + $(check_arg_r "$read_arg") ))
 		if [ "$tmp" -eq "0" ] && [ "$read_arg" -le "$file_size" ]; then
