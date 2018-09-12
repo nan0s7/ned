@@ -1,9 +1,9 @@
 #!/bin/sh
 
+read_in=""
 s_line=0
 current_file="file.sh"
-modified="0"
-possible_cmd="p h l n s w z q"
+cmd_list="p h l n s w z q"
 
 count_file_size() {
 	file_size="0"
@@ -17,6 +17,7 @@ arr_valx_r() {
 	for element in $1; do
 		if [ "$i" -eq "$2" ]; then
 			echo "$element"
+			break
 		else
 			i=$(( i + 1 ))
 		fi
@@ -29,6 +30,7 @@ arr_xval_r() {
 	for element in $1; do
 		if [ "$element" = "$2" ]; then
 			output="$i"
+			break
 		else
 			i=$(( i + 1 ))
 		fi
@@ -44,6 +46,7 @@ arr_len_r() {
 	echo "$i"
 }
 
+# make a word to array function? so 450 > 4 5 0
 is_num_r() {
 	number="$1"
 	bool=0
@@ -72,10 +75,6 @@ g_and_r() {
 	else
 		echo 1
 	fi
-}
-
-print_help() {
-	echo "Usage: [COMMAND] <ARGUMENT> ... "
 }
 
 get_input() {
@@ -107,18 +106,7 @@ make_file() {
 	fi
 }
 
-check_arg_r() {
-	if [ -n "$1" ]; then
-		echo "0"
-	else
-		echo "1"
-	fi
-}
-
-cut_off_cmd_r() {
-	echo $(expr substr "$1" 2 ${#1})
-}
-
+# error checking here please
 exec_p() {
 	args="$1"
 	case $2 in
@@ -137,13 +125,11 @@ exec_q() {
 }
 
 check_cmd() {
-	full_cmd="$1"
-	cmd=$(expr substr "$full_cmd" 1 1)
-
-	args=$(cut_off_cmd_r "$full_cmd")
+	cmd=$(expr substr "$read_in" 1 1)
+	args=$(expr substr "$read_in" 2 ${#read_in})
 	num_args=$(arr_len_r "$args")
 
-	if [ $(is_num_r $(arr_xval_r "$possible_cmd" "$cmd")) -eq "0" ]; then
+	if [ $(is_num_r $(arr_xval_r "$cmd_list" "$cmd")) -eq "0" ]; then
 		case $cmd in
 			("p") exec_p "$args" "$num_args";;
 			("l") exec_l "$args";;
@@ -151,17 +137,16 @@ check_cmd() {
 			(*) echo "wut";;
 		esac
 	else
-		echo "no"
+		echo "Invalid command"
 	fi
 }
 
 main() {
 	count_file_size
 
-	a=0
-	while a=0; do
+	while true; do
 		get_input
-		check_cmd "$read_in"
+		check_cmd
 	done
 }
 
